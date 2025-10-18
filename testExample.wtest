@@ -1,9 +1,108 @@
-import example.pepita
+import profesionalesYEmpresas.*
+import provincias.*
+import solicitantes.*
 
-describe "group of tests for pepita" {
-
-  test "pepita has initial energy" {
-    assert.equals(100, pepita.energy())
+describe "universidades y profesionales" {
+  const universidadSanMartin = new Universidad(provincia = buenosAires, honorariosRecomendados = 3500)
+  const universidadRosario = new Universidad(provincia = santaFe, honorariosRecomendados = 2800)
+  const universidadCorrientes = new Universidad(provincia = corrientes, honorariosRecomendados = 4200)
+  const universidadHurlingham = new Universidad(provincia = buenosAires, honorariosRecomendados = 8800)
+  const juana = new ProfesionalVinculado(universidad = universidadRosario)
+  const melina = new ProfesionalAsociadoLitoral(universidad = universidadCorrientes)
+  const rocio = new ProfesionalesLibres(universidad = universidadHurlingham, honorarios = 5000,provincias = #{santaFe, cordoba, buenosAires})
+  const luciana = new ProfesionalesLibres(universidad = universidadRosario, honorarios = 3200, provincias = #{santaFe, entreRios})
+  const empresa1 = new EmpresaServicios(honorarioReferencia = 3500)
+  method initialize (){
+    empresa1.contratarProfesional(juana)
+    empresa1.contratarProfesional(melina)
+    empresa1.contratarProfesional(rocio)
+    empresa1.contratarProfesional(luciana)
+  }
+  test "una empresa de servicios con profesionales vinculados, asociados y libres" {
+    assert.equals( empresa1.profesionalesDeUniversidad(universidadRosario), 2)
+    assert.equals( empresa1.profesionalesDeUniversidad(universidadHurlingham), 1)
+    assert.equals( empresa1.profesionalesDeUniversidad(universidadSanMartin), 0)
+    
+  }
+  test "profesionales caros devuelve solo a Rocio"{
+    assert.equals(empresa1.profesionalesCaros(), #{rocio})
+  }
+  test "universidades formadoras devuelve las universidades de los profesionales contratados"{
+    assert.equals(empresa1.universidadesFormadoras(), #{universidadRosario, universidadCorrientes, universidadHurlingham})
+  }
+  test "profesional mas barato devuelve a Juana"{
+    assert.equals(empresa1.profesionalMasBarato(), juana)
+  }
+  test "es de gente acotada devuelve true porque todos pueden trabajar en al menos 3 provincias "{
+    assert.notThat(empresa1.esDeGenteAcotada())
+    luciana.agregarProvincia(corrientes)
+    luciana.agregarProvincia(misiones)
+    assert.that(empresa1.esDeGenteAcotada())
+    
   }
 
+}
+
+describe "Etapa 2" {
+  const universidadRosario = new Universidad(provincia = santaFe, honorariosRecomendados = 2800)
+  const pepe = new ProfesionalVinculado(universidad = universidadRosario)
+  const institucionUno = new Institucion(universidadesReconocidas = #{universidadRosario})
+  const jose = new Persona(provincia = santaFe)
+  const clubUno = new Club(provincias = #{santaFe})
+  const empresa1 = new EmpresaServicios(honorarioReferencia = 3500, profesionalesContratados = #{pepe})
+
+  test "Jose puede ser atendido por Pepe" {
+    assert.that(jose.puedeSerAtendidoPor(pepe))
+  }
+
+  test "Institucion uno puede ser atendida por Pepe" {
+    assert.that(institucionUno.puedeSerAtendidoPor(pepe))
+  }
+
+  test "El club uno puede ser atendido por Pepe" {
+    assert.that(clubUno.puedeSerAtendidoPor(pepe))
+  }
+
+  test "La empresa uno puede satisfacer a jose" {
+    assert.that(empresa1.puedeSatisfacerA(jose))
+  }
+}
+describe "Etapa 3" {
+  const universidadHurlingham = new Universidad(provincia = buenosAires, honorariosRecomendados = 8800)
+  const rocio = new ProfesionalesLibres(universidad = universidadHurlingham, honorarios = 5000, provincias = #{santaFe, cordoba, buenosAires})
+  const nora = new ProfesionalesLibres(universidad = universidadHurlingham, honorarios = 7000, provincias = #{buenosAires})
+  const matias = new ProfesionalAsociadoLitoral(universidad = universidadHurlingham)
+
+  test "Rocio cobra un importe y da una parte a Nora"{
+    rocio.cobrarImporte(2000)
+    rocio.pasarDineroA(nora, 1000)
+
+    assert.that(rocio.totalRecaudado() == 1000)
+  }
+  test "matias cobra y le da a la asociacion de profesionales"{
+    matias.cobrarImporte(3000)
+    //asociacionDeProfesionales.recibirDonacion(3000)
+
+    assert.that(asociacionDeProfesionales.totalRecaudado() == 3000)
+  }
+  
+}
+
+describe "Etapa 4" {
+  const universidadHurlingham = new Universidad(provincia = buenosAires, honorariosRecomendados = 8800)
+  const empresa1 = new EmpresaServicios(honorarioReferencia = 6000, profesionalesContratados = #{jaimito})
+  const rocio = new ProfesionalesLibres(universidad = universidadHurlingham, honorarios = 5000, provincias = #{buenosAires, santaFe})
+  const jaimito = new ProfesionalesLibres(universidad = universidadHurlingham, honorarios = 3000, provincias = #{buenosAires, santaFe})
+  const jose = new Persona(provincia = santaFe)
+
+  test "Rocio es poco atractiva" {
+    assert.that(empresa1.esPocoAtractivo(rocio))
+  }
+
+  test "Test de servicio" {
+    empresa1.darServicio(jose)
+    assert.equals(1, empresa1.trabajosRealizados())
+    assert.that(empresa1.clientes().contains(jose))
+    assert.equals(3000, jaimito.totalRecaudado())
+  }
 }
